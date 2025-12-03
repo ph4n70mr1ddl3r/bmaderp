@@ -1,0 +1,33 @@
+{
+    "name": "bmaderp",
+    "version": "0.0.1",
+    "description": "Cloud-based retail ERP for APAC mid-market retail chains",
+    "private": true,
+    "type": "module",
+    "workspaces": [
+        "packages/*"
+    ],
+    "scripts": {
+        "dev": "pnpm -r --parallel run dev",
+        "build": "pnpm -r run build",
+        "test": "pnpm -r run test",
+        "test:watch": "pnpm -r run test:watch",
+        "test:coverage": "pnpm -r run test:coverage",
+        "lint": "pnpm -r run lint",
+        "lint:fix": "pnpm -r run lint:fix",
+        "format": "prettier --write \"packages/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+        "db:migrate": "cd packages/backend && npx prisma migrate dev",
+        "db:seed": "cd packages/backend && npx prisma db seed",
+        "db:studio": "cd packages/backend && npx prisma studio",
+        "type-check": "pnpm -r run type-check",
+        "clean": "pnpm -r exec rm -rf dist node_modules .turbo && rm -rf node_modules .pnpm-store pnpm-lock.yaml"
+    },
+    "devDependencies": {
+        "prettier": "^3.1.1",
+        "typescript": "^5.3.3"
+    },
+    "engines": {
+        "node": ">=20.0.0",
+        "pnpm": ">=8.0.0"
+    }
+}

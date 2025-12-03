@@ -1,0 +1,109 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  storeId       String    @db.VarChar(255)
+  email         String    @unique @db.VarChar(255)
+  passwordHash  String    @db.VarChar(255)
+  firstName     String    @db.VarChar(100)
+  lastName      String    @db.VarChar(100)
+  role          String    @db.VarChar(50)
+  phone         String?   @db.VarChar(20)
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  store         Store     @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+  @@index([email])
+}
+
+model Store {
+  id              String    @id @default(cuid())
+  name            String    @db.VarChar(255)
+  region          String    @db.VarChar(100)
+  city            String    @db.VarChar(100)
+  country         String    @db.VarChar(100)
+  address         String    @db.Text
+  phone           String?   @db.VarChar(20)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  users           User[]
+  inventory       InventoryItem[]
+  orders          Order[]
+  auditLogs       AuditLog[]
+
+  @@index([region])
+  @@index([country])
+}
+
+model InventoryItem {
+  id              String    @id @default(cuid())
+  storeId         String    @db.VarChar(255)
+  sku             String    @db.VarChar(100)
+  productName     String    @db.VarChar(255)
+  category        String    @db.VarChar(100)
+  quantity        Int       @default(0)
+  reorderLevel    Int       @default(10)
+  reorderQuantity Int       @default(50)
+  price           Decimal   @db.Decimal(10, 2)
+  cost            Decimal   @db.Decimal(10, 2)
+  lastSyncAt      DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  store           Store     @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, sku])
+  @@index([storeId])
+  @@index([sku])
+  @@index([category])
+}
+
+model Order {
+  id              String    @id @default(cuid())
+  storeId         String    @db.VarChar(255)
+  orderNumber     String    @unique @db.VarChar(50)
+  status          String    @db.VarChar(50) @default("PENDING")
+  orderType       String    @db.VarChar(50) @default("ONLINE")
+  totalAmount     Decimal   @db.Decimal(10, 2)
+  createdById     String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  fulfilledAt     DateTime?
+
+  store           Store     @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id              String    @id @default(cuid())
+  storeId         String    @db.VarChar(255)
+  action          String    @db.VarChar(100)
+  resource        String    @db.VarChar(255)
+  resourceId      String    @db.VarChar(255)
+  userId          String?   @db.VarChar(255)
+  changes         Json?
+  createdAt       DateTime  @default(now())
+
+  store           Store     @relation(fields: [storeId], references: [id])
+
+  @@index([storeId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([resourceId])
+}
