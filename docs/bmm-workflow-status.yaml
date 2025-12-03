@@ -1,0 +1,45 @@
+# BMad Method Workflow Status - bmaderp
+# Generated: 2025-12-03
+# Project: bmaderp (APAC Retail ERP)
+# Track: BMad Method (Brownfield)
+# Field Type: brownfield
+# Status: Planning Phase - Existing Research Complete, PRD Next
+
+generated: "2025-12-03"
+project: "bmaderp"
+project_type: "SaaS/Enterprise"
+selected_track: "bmad-method"
+field_type: "brownfield"
+workflow_path: "method-brownfield"
+
+workflow_status:
+  # PREREQUISITE: Document existing codebase
+  document-project: "required"
+  
+  # PHASE 0: Discovery (Optional - Already Completed)
+  # User has comprehensive research already done
+  brainstorm-project: "docs/analysis/product-brief-bmaderp-2025-12-02.md"
+  research: "docs/analysis/research/market-retail-erp-research-2025-12-02.md"
+  product-brief: "docs/analysis/product-brief-bmaderp-2025-12-02.md"
+  
+  # PHASE 1: Planning
+  prd: "required"
+  validate-prd: "recommended"
+  create-ux-design: "conditional-if_has_ui"
+  
+  # PHASE 2: Solutioning
+  create-architecture: "recommended"
+  create-epics-and-stories: "required"
+  test-design: "recommended"
+  validate-architecture: "optional"
+  implementation-readiness: "required"
+  
+  # PHASE 3: Implementation
+  sprint-planning: "required"
+
+notes:
+  - "Brownfield project: Existing codebase with research complete"
+  - "Discovery phase already completed with excellent research artifacts"
+  - "PRD phase is next critical step to formalize requirements"
+  - "Architecture phase will bridge research + existing codebase into solution design"
+  - "Document-project should run first to analyze codebase"
