@@ -1,9 +1,13 @@
-import { ErrorRequestHandler } from 'express';
+import { ErrorRequestHandler, Request } from 'express';
 import { ApiError, ApiResponse } from '@bmaderp/shared';
 import { logger } from '../lib/logger';
 
+/**
+ * Global error handling middleware
+ * Converts errors to standardized API responses
+ */
 export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
-  const requestId = (req as any).id || 'unknown';
+  const requestId = (req as Request & { id?: string }).id || 'unknown';
   logger.error(`Error caught by error handler [Request ID: ${requestId}]`, err);
 
   if (err instanceof ApiError) {
