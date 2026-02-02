@@ -13,16 +13,28 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { logger } from './lib/logger.js';
 import { config } from './lib/config.js';
 import { connectRedis, disconnectRedis } from './lib/redis.js';
+import { connectDatabase, disconnectDatabase } from './lib/prisma.js';
 
 const app: Express = express();
 const port = config.backendPort;
 
 app.use(helmet());
-app.use(cors({ origin: config.corsOrigin }));
+const corsOrigins =
+  config.nodeEnv === 'production'
+    ? config.corsOrigin
+      ? config.corsOrigin.split(',')
+      : []
+    : [config.corsOrigin];
 
-// Body parsing
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(
+  cors({
+    origin: corsOrigins,
+    credentials: true,
+  })
+);
+
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ limit: '1mb', extended: true }));
 
 // Custom middleware
 setupMiddleware(app);
@@ -38,6 +50,9 @@ const server = createServer(app);
 
 const startServer = async () => {
   try {
+    // Connect to database
+    await connectDatabase();
+
     // Connect to Redis
     await connectRedis();
 
@@ -65,6 +80,13 @@ const gracefulShutdown = async (signal: string) => {
       logger.info('Redis connection closed');
     } catch (error) {
       logger.error('Error closing Redis connection', error);
+    }
+
+    try {
+      await disconnectDatabase();
+      logger.info('Database connection closed');
+    } catch (error) {
+      logger.error('Error closing database connection', error);
     }
 
     process.exit(0);
