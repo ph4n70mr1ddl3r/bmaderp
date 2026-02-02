@@ -15,13 +15,36 @@ const getUserFromStorage = (): { email: string; role: string } | null => {
     if (!userStr) return null;
     return JSON.parse(userStr);
   } catch (error) {
-    console.error('Failed to parse user from storage:', error);
     return null;
   }
 };
 
+const safeGetItem = (key: string): string | null => {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const safeSetItem = (key: string, value: string): void => {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    return;
+  }
+};
+
+const safeRemoveItem = (key: string): void => {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    return;
+  }
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
-  isAuthenticated: !!localStorage.getItem('accessToken'),
+  isAuthenticated: !!safeGetItem('accessToken'),
   user: getUserFromStorage(),
   login: async (email: string, password: string) => {
     try {
@@ -33,8 +56,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error('Invalid response format');
       }
 
-      localStorage.setItem('accessToken', response.data.data.accessToken);
-      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      safeSetItem('accessToken', response.data.data.accessToken);
+      safeSetItem('user', JSON.stringify(response.data.data.user));
       set({ isAuthenticated: true, user: response.data.data.user });
     } catch (error) {
       if (error instanceof Error) {
@@ -44,8 +67,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
   logout: () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('user');
+    safeRemoveItem('accessToken');
+    safeRemoveItem('user');
     set({ isAuthenticated: false, user: null });
   },
 }));

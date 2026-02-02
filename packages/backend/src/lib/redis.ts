@@ -40,6 +40,7 @@ export const disconnectRedis = async () => {
 
 export const getRedis = () => {
   if (!redisClient.isOpen) {
+    logger.error('Attempted to get Redis client but connection is not open');
     throw new Error('Redis client is not connected');
   }
   return redisClient;

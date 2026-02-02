@@ -1,3 +1,5 @@
+import { UserRole } from '@bmaderp/shared';
+
 declare global {
   namespace Express {
     interface Request {
@@ -6,7 +8,7 @@ declare global {
         userId: string;
         email: string;
         storeId: string;
-        role: string;
+        role: UserRole;
       };
     }
   }

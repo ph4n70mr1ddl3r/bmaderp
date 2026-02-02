@@ -4,7 +4,9 @@ import { config } from '../lib/config.js';
 import { UnauthorizedError, UserRole } from '@bmaderp/shared';
 import { logger } from '../lib/logger.js';
 
-const USER_ROLES = ['ASSOCIATE', 'STORE_MANAGER', 'REGIONAL_MANAGER', 'ADMIN'];
+const isValidUserRole = (role: string): role is UserRole => {
+  return Object.values(UserRole).includes(role as UserRole);
+};
 
 export const authenticateToken = (req: Request, _res: Response, next: NextFunction) => {
   const authHeader = req.headers['authorization'];
@@ -26,7 +28,7 @@ export const authenticateToken = (req: Request, _res: Response, next: NextFuncti
       throw new UnauthorizedError('Invalid token payload');
     }
 
-    if (!USER_ROLES.includes(decoded.role)) {
+    if (!isValidUserRole(decoded.role)) {
       throw new UnauthorizedError('Invalid user role in token');
     }
 
@@ -34,7 +36,7 @@ export const authenticateToken = (req: Request, _res: Response, next: NextFuncti
       userId: decoded.userId,
       email: decoded.email,
       storeId: decoded.storeId,
-      role: decoded.role as UserRole,
+      role: decoded.role,
     };
     next();
   } catch (err) {
@@ -54,7 +56,7 @@ export const authenticateToken = (req: Request, _res: Response, next: NextFuncti
   }
 };
 
-export const requireRole = (...allowedRoles: string[]) => {
+export const requireRole = (...allowedRoles: UserRole[]) => {
   return (req: Request, _res: Response, next: NextFunction) => {
     if (!req.user) {
       throw new UnauthorizedError('Authentication required');
