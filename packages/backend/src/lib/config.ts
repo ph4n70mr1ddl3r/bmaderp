@@ -12,6 +12,8 @@ interface Config {
   redisUrl: string;
   jwtSecret: string;
   jwtRefreshSecret: string;
+  jwtExpiry: string;
+  jwtRefreshExpiry: string;
 }
 
 const validateConfig = (): Config => {
@@ -38,6 +40,8 @@ const validateConfig = (): Config => {
     redisUrl,
     jwtSecret,
     jwtRefreshSecret,
+    jwtExpiry: process.env.JWT_EXPIRY || '15m',
+    jwtRefreshExpiry: process.env.JWT_REFRESH_EXPIRY || '7d',
   };
 
   if (isNaN(config.backendPort) || config.backendPort < 1 || config.backendPort > 65535) {

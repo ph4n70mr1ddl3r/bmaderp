@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../lib/config.js';
-import { UnauthorizedError } from '@bmaderp/shared';
+import { UnauthorizedError, UserRole } from '@bmaderp/shared';
 import { logger } from '../lib/logger.js';
+
+const USER_ROLES = ['ASSOCIATE', 'STORE_MANAGER', 'REGIONAL_MANAGER', 'ADMIN'];
 
 export const authenticateToken = (req: Request, _res: Response, next: NextFunction) => {
   const authHeader = req.headers['authorization'];
@@ -19,7 +21,21 @@ export const authenticateToken = (req: Request, _res: Response, next: NextFuncti
       storeId: string;
       role: string;
     };
-    req.user = decoded;
+
+    if (!decoded.userId || !decoded.email || !decoded.storeId || !decoded.role) {
+      throw new UnauthorizedError('Invalid token payload');
+    }
+
+    if (!USER_ROLES.includes(decoded.role)) {
+      throw new UnauthorizedError('Invalid user role in token');
+    }
+
+    req.user = {
+      userId: decoded.userId,
+      email: decoded.email,
+      storeId: decoded.storeId,
+      role: decoded.role as UserRole,
+    };
     next();
   } catch (err) {
     if (err instanceof jwt.TokenExpiredError) {
@@ -29,6 +45,9 @@ export const authenticateToken = (req: Request, _res: Response, next: NextFuncti
     if (err instanceof jwt.JsonWebTokenError) {
       logger.error('JWT token invalid', err);
       throw new UnauthorizedError('Invalid token');
+    }
+    if (err instanceof UnauthorizedError) {
+      throw err;
     }
     logger.error('JWT verification failed', err);
     throw new UnauthorizedError('Invalid or expired token');

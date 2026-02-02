@@ -21,10 +21,11 @@ redisClient.on('disconnect', () => {
 export const connectRedis = async () => {
   try {
     await redisClient.connect();
+    logger.info('Redis connected successfully');
     return redisClient;
   } catch (error) {
     logger.error('Failed to connect to Redis', error);
-    throw error;
+    throw new Error('Redis connection failed');
   }
 };
 
@@ -37,6 +38,11 @@ export const disconnectRedis = async () => {
   }
 };
 
-export const getRedis = () => redisClient;
+export const getRedis = () => {
+  if (!redisClient.isOpen) {
+    throw new Error('Redis client is not connected');
+  }
+  return redisClient;
+};
 
 export default redisClient;

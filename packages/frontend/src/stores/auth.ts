@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import apiClient from '../services/api';
+import type { ApiResponse } from '@bmaderp/shared';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -7,26 +9,39 @@ interface AuthState {
   logout: () => void;
 }
 
+const getUserFromStorage = (): { email: string; role: string } | null => {
+  try {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
+    return JSON.parse(userStr);
+  } catch (error) {
+    console.error('Failed to parse user from storage:', error);
+    return null;
+  }
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: !!localStorage.getItem('accessToken'),
-  user: JSON.parse(localStorage.getItem('user') || 'null'),
+  user: getUserFromStorage(),
   login: async (email: string, password: string) => {
-    const response = await fetch('/api/v1/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'Login failed');
+    try {
+      const response = await apiClient.post<
+        ApiResponse<{ accessToken: string; user: { email: string; role: string } }>
+      >('/v1/auth/login', { email, password });
+
+      if (!response.data.success || !response.data.data) {
+        throw new Error('Invalid response format');
+      }
+
+      localStorage.setItem('accessToken', response.data.data.accessToken);
+      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      set({ isAuthenticated: true, user: response.data.data.user });
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Login failed');
     }
-    const data = await response.json();
-    if (!data.success || !data.data) {
-      throw new Error('Invalid response format');
-    }
-    localStorage.setItem('accessToken', data.data.accessToken);
-    localStorage.setItem('user', JSON.stringify(data.data.user));
-    set({ isAuthenticated: true, user: data.data.user });
   },
   logout: () => {
     localStorage.removeItem('accessToken');

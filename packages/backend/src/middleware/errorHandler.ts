@@ -1,6 +1,6 @@
 import { ErrorRequestHandler, Request } from 'express';
 import { ApiError, ApiResponse } from '@bmaderp/shared';
-import { logger } from '../lib/logger';
+import { logger } from '../lib/logger.js';
 
 /**
  * Global error handling middleware
@@ -8,9 +8,18 @@ import { logger } from '../lib/logger';
  */
 export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   const requestId = (req as Request & { id?: string }).id || 'unknown';
-  logger.error(`Error caught by error handler [Request ID: ${requestId}]`, err);
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
   if (err instanceof ApiError) {
+    logger.error(`API Error [Request ID: ${requestId}]`, {
+      code: err.code,
+      message: err.message,
+      statusCode: err.statusCode,
+      retryable: err.retryable,
+      path: req.path,
+      method: req.method,
+    });
+
     const response: ApiResponse = {
       success: false,
       error: {
@@ -27,11 +36,18 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     };
     res.status(err.statusCode).json(response);
   } else {
+    logger.error(`Unhandled Error [Request ID: ${requestId}]`, {
+      error: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+      path: req.path,
+      method: req.method,
+    });
+
     const response: ApiResponse = {
       success: false,
       error: {
         code: 'INTERNAL_ERROR',
-        message: 'Internal server error',
+        message: isDevelopment && err instanceof Error ? err.message : 'Internal server error',
         statusCode: 500,
         retryable: false,
       },
