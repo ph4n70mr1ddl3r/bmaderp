@@ -1,7 +1,8 @@
 import { Express, Request, RequestHandler } from 'express';
 import rateLimit from 'express-rate-limit';
 import { v4 as uuidv4 } from 'uuid';
-import { config } from '../lib/config';
+import { config } from '../lib/config.js';
+import { authenticateToken } from './auth.js';
 
 /**
  * Middleware to assign a unique request ID to each request
@@ -29,3 +30,6 @@ export const setupMiddleware = (app: Express) => {
   app.use(requestIdMiddleware);
   app.use(limiter);
 };
+
+export { authenticateToken };
+export { requireRole } from './auth.js';

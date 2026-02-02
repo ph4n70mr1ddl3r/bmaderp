@@ -22,3 +22,4 @@ out/
 .eslintcache
 coverage/
 .nyc_output/
+*.tsbuildinfo

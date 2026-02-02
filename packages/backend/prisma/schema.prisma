@@ -1,3 +1,6 @@
+// Prisma schema for bmaderp ERP system
+// Updated: 2025-02-02
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -7,51 +10,95 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum UserRole {
+  ASSOCIATE
+  STORE_MANAGER
+  REGIONAL_MANAGER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  FULFILLED
+  RETURNED
+  CANCELLED
+}
+
+enum OrderType {
+  ONLINE
+  OMNICHANNEL
+  IN_STORE
+}
+
+enum SwapStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SyncStatus {
+  PENDING
+  SYNCED
+  CONFLICT
+  ERROR
+}
+
 model User {
-  id            String    @id @default(cuid())
+  id            String    @id @default(uuid())
   storeId       String    @db.VarChar(255)
   email         String    @unique @db.VarChar(255)
   passwordHash  String    @db.VarChar(255)
   firstName     String    @db.VarChar(100)
   lastName      String    @db.VarChar(100)
-  role          String    @db.VarChar(50)
+  role          UserRole  @default(ASSOCIATE)
   phone         String?   @db.VarChar(20)
   isActive      Boolean   @default(true)
   lastLoginAt   DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  store         Store     @relation(fields: [storeId], references: [id])
+  store          Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  ordersCreated  Order[]         @relation("OrderCreator")
+  salesRecords   SalesRecord[]
+  schedules      Schedule[]
+  swapRequests   SwapRequest[]  @relation("SwapRequests")
+  swapApprovals  SwapRequest[]  @relation("SwapApprovals")
+  auditLogs      AuditLog[]
 
   @@index([storeId])
   @@index([email])
 }
 
 model Store {
-  id              String    @id @default(cuid())
+  id              String    @id @default(uuid())
   name            String    @db.VarChar(255)
   region          String    @db.VarChar(100)
   city            String    @db.VarChar(100)
   country         String    @db.VarChar(100)
   address         String    @db.Text
   phone           String?   @db.VarChar(20)
+  timezone        String    @default("UTC")
   isActive        Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  users           User[]
-  inventory       InventoryItem[]
-  orders          Order[]
-  auditLogs       AuditLog[]
+  users               User[]
+  inventory           InventoryItem[]
+  orders              Order[]
+  auditLogs           AuditLog[]
+  schedules           Schedule[]
+  salesRecords        SalesRecord[]
+  inventorySyncRecords InventorySyncRecord[]
+  syncQueue           SyncQueue[]
 
   @@index([region])
   @@index([country])
 }
 
 model InventoryItem {
-  id              String    @id @default(cuid())
+  id              String    @id @default(uuid())
   storeId         String    @db.VarChar(255)
-  sku             String    @db.VarChar(100)
+  sku             String    @unique @db.VarChar(100)
   productName     String    @db.VarChar(255)
   category        String    @db.VarChar(100)
   quantity        Int       @default(0)
@@ -63,7 +110,8 @@ model InventoryItem {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  store           Store     @relation(fields: [storeId], references: [id])
+  store       Store                 @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  syncRecords InventorySyncRecord[]
 
   @@unique([storeId, sku])
   @@index([storeId])
@@ -72,38 +120,163 @@ model InventoryItem {
 }
 
 model Order {
-  id              String    @id @default(cuid())
-  storeId         String    @db.VarChar(255)
-  orderNumber     String    @unique @db.VarChar(50)
-  status          String    @db.VarChar(50) @default("PENDING")
-  orderType       String    @db.VarChar(50) @default("ONLINE")
-  totalAmount     Decimal   @db.Decimal(10, 2)
-  createdById     String
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id              String      @id @default(uuid())
+  storeId         String      @db.VarChar(255)
+  orderNumber     String      @unique @db.VarChar(50)
+  status          OrderStatus @default(PENDING)
+  orderType       OrderType   @default(ONLINE)
+  totalAmount     Decimal     @db.Decimal(10, 2)
+  createdById     String      @db.VarChar(255)
   fulfilledAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
-  store           Store     @relation(fields: [storeId], references: [id])
+  store   Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  creator User       @relation("OrderCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  items   OrderItem[]
 
   @@index([storeId])
+  @@index([orderNumber])
   @@index([status])
   @@index([createdAt])
 }
 
-model AuditLog {
-  id              String    @id @default(cuid())
-  storeId         String    @db.VarChar(255)
-  action          String    @db.VarChar(100)
-  resource        String    @db.VarChar(255)
-  resourceId      String    @db.VarChar(255)
-  userId          String?   @db.VarChar(255)
-  changes         Json?
-  createdAt       DateTime  @default(now())
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String   @db.VarChar(255)
+  sku       String   @db.VarChar(100)
+  quantity  Int
+  price     Decimal  @db.Decimal(10, 2)
 
-  store           Store     @relation(fields: [storeId], references: [id])
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([sku])
+}
+
+model Schedule {
+  id          String   @id @default(uuid())
+  storeId     String   @db.VarChar(255)
+  userId      String   @db.VarChar(255)
+  shiftDate   DateTime
+  shiftStart  String   @db.VarChar(10)
+  shiftEnd    String   @db.VarChar(10)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  store         Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  swapRequests  SwapRequest[]
+  attendance    Attendance[]
+
+  @@index([storeId])
+  @@index([userId])
+  @@index([shiftDate])
+}
+
+model SwapRequest {
+  id                String      @id @default(uuid())
+  scheduleId        String      @db.VarChar(255)
+  requestedFromUserId String     @db.VarChar(255)
+  requestedToUserId String?     @db.VarChar(255)
+  status            SwapStatus  @default(PENDING)
+  reason            String?     @db.Text
+  reviewedAt        DateTime?
+  createdAt         DateTime    @default(now())
+
+  schedule    Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  requestFrom User     @relation("SwapRequests", fields: [requestedFromUserId], references: [id])
+  requestTo   User?    @relation("SwapApprovals", fields: [requestedToUserId], references: [id])
+
+  @@index([scheduleId])
+  @@index([requestedFromUserId])
+  @@index([status])
+}
+
+model Attendance {
+  id           String    @id @default(uuid())
+  scheduleId   String    @db.VarChar(255)
+  checkInTime  DateTime?
+  checkOutTime DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@index([scheduleId])
+}
+
+model SalesRecord {
+  id         String   @id @default(uuid())
+  storeId    String   @db.VarChar(255)
+  userId     String   @db.VarChar(255)
+  amount     Decimal  @db.Decimal(10, 2)
+  category   String   @db.VarChar(100)
+  recordDate DateTime
+  createdAt  DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+  @@index([userId])
+  @@index([recordDate])
+}
+
+model AuditLog {
+  id         String    @id @default(uuid())
+  storeId    String    @db.VarChar(255)
+  action     String    @db.VarChar(100)
+  resource   String    @db.VarChar(255)
+  resourceId String    @db.VarChar(255)
+  userId     String?   @db.VarChar(255)
+  changes    Json?
+  createdAt  DateTime  @default(now())
+
+  store Store? @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([storeId])
   @@index([action])
   @@index([createdAt])
   @@index([resourceId])
+}
+
+model InventorySyncRecord {
+  id               String   @id @default(uuid())
+  inventoryItemId  String   @db.VarChar(255)
+  storeId          String   @db.VarChar(255)
+  clientQuantity   Int
+  serverQuantity   Int
+  conflictDetected Boolean  @default(false)
+  resolution       String?  @db.VarChar(50)
+  createdAt        DateTime @default(now())
+
+  inventoryItem  InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  store           Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryItemId])
+  @@index([storeId])
+  @@index([conflictDetected])
+}
+
+model SyncQueue {
+  id               String     @id @default(uuid())
+  storeId          String     @db.VarChar(255)
+  operation        String     @db.VarChar(50)
+  resource         String     @db.VarChar(100)
+  resourceId       String     @db.VarChar(255)
+  payload          Json
+  clientTimestamp  DateTime
+  status           SyncStatus @default(PENDING)
+  retryCount       Int        @default(0)
+  syncedAt         DateTime?
+  createdAt        DateTime   @default(now())
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+  @@index([status])
+  @@index([clientTimestamp])
 }
