@@ -20,5 +20,13 @@
     "@typescript-eslint/no-explicit-any": "warn",
     "no-console": ["warn", { "allow": ["warn", "error"] }]
   },
-  "ignorePatterns": ["dist", "node_modules", "*.config.js", "*.config.ts"]
+  "ignorePatterns": ["dist", "node_modules", "*.config.js", "*.config.ts"],
+  "overrides": [
+    {
+      "files": ["packages/backend/src/lib/logger.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ]
 }

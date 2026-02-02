@@ -19,21 +19,36 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+interface ApiError extends Error {
+  code?: string;
+  statusCode?: number;
+  retryable?: boolean;
+}
+
 apiClient.interceptors.response.use(
   (response) => {
     const data = response.data as ApiResponse;
     if (!data.success && data.error) {
-      throw new Error(data.error.message);
+      const error = new Error(data.error.message) as ApiError;
+      error.code = data.error.code;
+      error.statusCode = data.error.statusCode;
+      error.retryable = data.error.retryable;
+      throw error;
     }
     return response;
   },
   (error) => {
     const errorData = error.response?.data as ApiResponse;
     if (errorData?.error) {
-      throw new Error(errorData.error.message);
+      const apiError = new Error(errorData.error.message) as ApiError;
+      apiError.code = errorData.error.code;
+      apiError.statusCode = errorData.error.statusCode;
+      apiError.retryable = errorData.error.retryable;
+      return Promise.reject(apiError);
     }
-    if (error.response && error.response.status === 401) {
+    if (error.response?.status === 401) {
       localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
       window.location.href = '/login';
     }
     return Promise.reject(error);

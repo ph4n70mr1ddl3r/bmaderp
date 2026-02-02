@@ -1,54 +1,49 @@
-/* eslint-disable no-console */
 import { LOG_LEVELS } from '@bmaderp/shared';
 
 const getTimestamp = () => new Date().toISOString();
+
+const logMessage = (level: string, message: string, data?: unknown, error?: unknown) => {
+  const logData = {
+    level,
+    timestamp: getTimestamp(),
+    message,
+    ...(data !== undefined && { data }),
+    ...(error !== undefined && {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+    }),
+  };
+  const output = JSON.stringify(logData);
+
+  switch (level) {
+    case LOG_LEVELS.ERROR:
+      console.error(output);
+      break;
+    case LOG_LEVELS.WARN:
+      console.warn(output);
+      break;
+    default:
+      console.log(output);
+  }
+};
 
 /**
  * Application logger with structured JSON output
  */
 export const logger = {
   debug: (message: string, data?: unknown) => {
-    console.log(
-      JSON.stringify({
-        level: LOG_LEVELS.DEBUG,
-        timestamp: getTimestamp(),
-        message,
-        data,
-      })
-    );
+    logMessage(LOG_LEVELS.DEBUG, message, data);
   },
 
   info: (message: string, data?: unknown) => {
-    console.log(
-      JSON.stringify({
-        level: LOG_LEVELS.INFO,
-        timestamp: getTimestamp(),
-        message,
-        data,
-      })
-    );
+    logMessage(LOG_LEVELS.INFO, message, data);
   },
 
   warn: (message: string, data?: unknown) => {
-    console.warn(
-      JSON.stringify({
-        level: LOG_LEVELS.WARN,
-        timestamp: getTimestamp(),
-        message,
-        data,
-      })
-    );
+    logMessage(LOG_LEVELS.WARN, message, data);
   },
 
   error: (message: string, error?: unknown) => {
-    console.error(
-      JSON.stringify({
-        level: LOG_LEVELS.ERROR,
-        timestamp: getTimestamp(),
-        message,
-        error: error instanceof Error ? error.message : error,
-        stack: error instanceof Error ? error.stack : undefined,
-      })
-    );
+    logMessage(LOG_LEVELS.ERROR, message, undefined, error);
   },
 };
