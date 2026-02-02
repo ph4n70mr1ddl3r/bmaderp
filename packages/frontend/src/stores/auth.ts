@@ -1,46 +1,18 @@
 import { create } from 'zustand';
 import apiClient from '../services/api';
-import type { ApiResponse } from '@bmaderp/shared';
+import type { ApiResponse, UserRole } from '@bmaderp/shared';
+import { API_VERSION } from '@bmaderp/shared';
+import { safeGetItem, safeSetItem, safeRemoveItem, safeGetJSON } from '../utils/storage';
 
 interface AuthState {
   isAuthenticated: boolean;
-  user: { email: string; role: string } | null;
+  user: { email: string; role: UserRole } | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
-const getUserFromStorage = (): { email: string; role: string } | null => {
-  try {
-    const userStr = localStorage.getItem('user');
-    if (!userStr) return null;
-    return JSON.parse(userStr);
-  } catch (error) {
-    return null;
-  }
-};
-
-const safeGetItem = (key: string): string | null => {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-};
-
-const safeSetItem = (key: string, value: string): void => {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    return;
-  }
-};
-
-const safeRemoveItem = (key: string): void => {
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    return;
-  }
+const getUserFromStorage = (): { email: string; role: UserRole } | null => {
+  return safeGetJSON<{ email: string; role: UserRole }>('user');
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -49,8 +21,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (email: string, password: string) => {
     try {
       const response = await apiClient.post<
-        ApiResponse<{ accessToken: string; user: { email: string; role: string } }>
-      >('/v1/auth/login', { email, password });
+        ApiResponse<{ accessToken: string; user: { email: string; role: UserRole } }>
+      >(`/${API_VERSION}/auth/login`, { email, password });
 
       if (!response.data.success || !response.data.data) {
         throw new Error('Invalid response format');

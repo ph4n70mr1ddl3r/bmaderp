@@ -14,6 +14,7 @@ import { logger } from './lib/logger.js';
 import { config } from './lib/config.js';
 import { connectRedis, disconnectRedis } from './lib/redis.js';
 import { connectDatabase, disconnectDatabase } from './lib/prisma.js';
+import { TIMEOUTS } from '@bmaderp/shared';
 
 const app: Express = express();
 const port = config.backendPort;
@@ -92,11 +93,11 @@ const gracefulShutdown = async (signal: string) => {
     process.exit(0);
   });
 
-  // Force close after 10 seconds
+  // Force close after timeout
   setTimeout(() => {
     logger.error('Forcing shutdown after timeout');
     process.exit(1);
-  }, 10000);
+  }, TIMEOUTS.GRACEFUL_SHUTDOWN);
 };
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

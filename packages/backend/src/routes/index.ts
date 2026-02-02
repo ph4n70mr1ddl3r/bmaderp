@@ -1,9 +1,7 @@
 // packages/backend/src/routes/index.ts
 import { Express, Router } from 'express';
 import { logger } from '../lib/logger.js';
-import { ApiResponse } from '@bmaderp/shared';
-
-const API_VERSION = 'v1';
+import { ApiResponse, API_VERSION } from '@bmaderp/shared';
 
 /**
  * Creates the API router with versioned endpoints

@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import { ValidationError } from '@bmaderp/shared';
 import { logger } from './logger.js';
 
-const saltRounds = 10;
+const saltRounds = 12;
 const MIN_PASSWORD_LENGTH = 8;
 
 export const hashPassword = async (password: string): Promise<string> => {

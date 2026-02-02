@@ -1,7 +1,8 @@
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import type { ApiResponse } from '@bmaderp/shared';
-import { TIMEOUTS, SYNC_CONFIG } from '@bmaderp/shared';
+import { TIMEOUTS, SYNC_CONFIG, API_VERSION } from '@bmaderp/shared';
+import { safeGetItem, safeRemoveItem } from '../utils/storage';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
@@ -12,7 +13,7 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
+  const token = safeGetItem('accessToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -47,8 +48,8 @@ apiClient.interceptors.response.use(
       return Promise.reject(apiError);
     }
     if (error.response?.status === 401) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('user');
+      safeRemoveItem('accessToken');
+      safeRemoveItem('user');
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -72,7 +73,7 @@ axiosRetry(apiClient, {
 });
 
 export const healthCheck = async (): Promise<ApiResponse> => {
-  const response = await apiClient.get<ApiResponse>('/v1/health');
+  const response = await apiClient.get<ApiResponse>(`/${API_VERSION}/health`);
   return response.data;
 };
 

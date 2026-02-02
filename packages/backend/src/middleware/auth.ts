@@ -10,7 +10,16 @@ const isValidUserRole = (role: string): role is UserRole => {
 
 export const authenticateToken = (req: Request, _res: Response, next: NextFunction) => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!authHeader) {
+    throw new UnauthorizedError('Authorization header required');
+  }
+
+  if (!authHeader.startsWith('Bearer ')) {
+    throw new UnauthorizedError('Invalid authorization format. Expected: Bearer <token>');
+  }
+
+  const token = authHeader.split(' ')[1];
 
   if (!token) {
     throw new UnauthorizedError('Access token required');
