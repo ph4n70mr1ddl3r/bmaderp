@@ -23,14 +23,10 @@ const validateConfig = (): Config => {
     throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
   }
 
-  const databaseUrl = process.env.DATABASE_URL;
-  const redisUrl = process.env.REDIS_URL;
-  const jwtSecret = process.env.JWT_SECRET;
-  const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
-
-  if (!databaseUrl || !redisUrl || !jwtSecret || !jwtRefreshSecret) {
-    throw new Error('Required environment variables are missing after validation');
-  }
+  const databaseUrl = process.env.DATABASE_URL!;
+  const redisUrl = process.env.REDIS_URL!;
+  const jwtSecret = process.env.JWT_SECRET!;
+  const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET!;
 
   const config: Config = {
     backendPort: parseInt(process.env.BACKEND_PORT || '3000', 10),

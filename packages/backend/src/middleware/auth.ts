@@ -22,6 +22,14 @@ export const authenticateToken = (req: Request, _res: Response, next: NextFuncti
     req.user = decoded;
     next();
   } catch (err) {
+    if (err instanceof jwt.TokenExpiredError) {
+      logger.error('JWT token expired', err);
+      throw new UnauthorizedError('Token expired');
+    }
+    if (err instanceof jwt.JsonWebTokenError) {
+      logger.error('JWT token invalid', err);
+      throw new UnauthorizedError('Invalid token');
+    }
     logger.error('JWT verification failed', err);
     throw new UnauthorizedError('Invalid or expired token');
   }

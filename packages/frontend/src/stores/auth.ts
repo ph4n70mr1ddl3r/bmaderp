@@ -16,7 +16,14 @@ export const useAuthStore = create<AuthState>((set) => ({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Login failed');
+    }
     const data = await response.json();
+    if (!data.success || !data.data) {
+      throw new Error('Invalid response format');
+    }
     localStorage.setItem('accessToken', data.data.accessToken);
     localStorage.setItem('user', JSON.stringify(data.data.user));
     set({ isAuthenticated: true, user: data.data.user });
