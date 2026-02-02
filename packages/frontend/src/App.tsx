@@ -1,12 +1,12 @@
-import './App.css';
-
 function App() {
   return (
     <div className="w-full h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">bmaderp</h1>
         <p className="text-xl text-gray-600">Cloud-based Retail ERP for APAC</p>
-        <p className="text-sm text-gray-500 mt-4">Architecture initialized and ready for development</p>
+        <p className="text-sm text-gray-500 mt-4">
+          Architecture initialized and ready for development
+        </p>
       </div>
     </div>
   );

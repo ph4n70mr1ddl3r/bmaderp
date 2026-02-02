@@ -1,45 +1,42 @@
-// packages/backend/src/middleware/errorHandler.ts
-import { Express, Request, Response, NextFunction } from 'express';
+import { ErrorRequestHandler } from 'express';
 import { ApiError, ApiResponse } from '@bmaderp/shared';
-import { logger } from '../lib/logger.js';
+import { logger } from '../lib/logger';
 
-export const errorHandler = (
-    err: Error | ApiError,
-    _req: Request,
-    res: Response,
-    _next: NextFunction
-): void => {
-    logger.error('Error caught by error handler', err);
+export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
+  const requestId = (req as any).id || 'unknown';
+  logger.error(`Error caught by error handler [Request ID: ${requestId}]`, err);
 
-    if (err instanceof ApiError) {
-        const response: ApiResponse = {
-            success: false,
-            error: {
-                code: err.code,
-                message: err.message,
-                statusCode: err.statusCode,
-                retryable: err.retryable,
-            },
-            meta: {
-                timestamp: new Date().toISOString(),
-                version: '1.0',
-            },
-        };
-        res.status(err.statusCode).json(response);
-    } else {
-        const response: ApiResponse = {
-            success: false,
-            error: {
-                code: 'INTERNAL_ERROR',
-                message: 'Internal server error',
-                statusCode: 500,
-                retryable: false,
-            },
-            meta: {
-                timestamp: new Date().toISOString(),
-                version: '1.0',
-            },
-        };
-        res.status(500).json(response);
-    }
+  if (err instanceof ApiError) {
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: err.code,
+        message: err.message,
+        statusCode: err.statusCode,
+        retryable: err.retryable,
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        version: '1.0',
+        requestId,
+      },
+    };
+    res.status(err.statusCode).json(response);
+  } else {
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Internal server error',
+        statusCode: 500,
+        retryable: false,
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        version: '1.0',
+        requestId,
+      },
+    };
+    res.status(500).json(response);
+  }
 };

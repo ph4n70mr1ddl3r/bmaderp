@@ -5,10 +5,10 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 
-import { setupMiddleware } from './middleware/index.js';
-import { setupRoutes } from './routes/index.js';
-import { errorHandler } from './middleware/errorHandler.js';
-import { logger } from './lib/logger.js';
+import { setupMiddleware } from './middleware/index';
+import { setupRoutes } from './routes/index';
+import { errorHandler } from './middleware/errorHandler';
+import { logger } from './lib/logger';
 
 dotenv.config();
 
@@ -28,7 +28,7 @@ setupMiddleware(app);
 
 // Health check endpoint
 app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // API routes
@@ -41,15 +41,15 @@ app.use(errorHandler);
 const server = createServer(app);
 
 server.listen(port, () => {
-    logger.info(`Server running on http://localhost:${port}`);
-    logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`Server running on http://localhost:${port}`);
+  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-    logger.info('SIGTERM received, shutting down gracefully');
-    server.close(() => {
-        logger.info('Server closed');
-        process.exit(0);
-    });
+  logger.info('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
+  });
 });
