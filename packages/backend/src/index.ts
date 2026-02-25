@@ -20,7 +20,34 @@ import { TIMEOUTS } from '@bmaderp/shared';
 const app: Express = express();
 const port = config.backendPort;
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", 'ws:', 'wss:'],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: 'same-origin',
+    crossOriginResourcePolicy: 'cross-origin',
+    dnsPrefetchControl: true,
+    frameguard: { action: 'deny' },
+    hidePoweredBy: true,
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+    ieNoOpen: true,
+    noSniff: true,
+    referrerPolicy: 'strict-origin-when-cross-origin',
+    xssFilter: true,
+  })
+);
 app.use(compression());
 
 const isAllowedOrigin = (origin: string): boolean => {
@@ -56,7 +83,7 @@ app.use(
       logger.warn(`CORS blocked request from origin: ${origin}`);
       return callback(new Error('Not allowed by CORS'), false);
     },
-    credentials: config.nodeEnv !== 'production', // Only allow credentials in trusted environments
+    credentials: config.nodeEnv === 'production' && config.corsOrigin ? true : false, // Only allow credentials in production with explicit CORS origin
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
     exposedHeaders: ['X-Total-Count', 'X-Page', 'X-Limit', 'X-Sort-By', 'X-Sort-Order'],

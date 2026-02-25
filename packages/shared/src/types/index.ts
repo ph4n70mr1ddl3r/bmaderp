@@ -49,7 +49,7 @@ export interface JwtPayload {
   userId: string;
   email: string;
   storeId: string;
-  role: string;
+  role: UserRole;
   iat: number;
   exp: number;
 }

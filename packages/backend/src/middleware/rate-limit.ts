@@ -16,7 +16,7 @@ export const createRateLimit = (
     },
     standardHeaders: true,
     legacyHeaders: false,
-    handler: (req: Request, res: Response) => {
+    handler: (_req: Request, res: Response) => {
       res.status(429).json({
         success: false,
         error: message,
@@ -27,17 +27,21 @@ export const createRateLimit = (
 };
 
 export const createAuthRateLimit = () => {
+  // Validate config values and provide fallbacks
+  const authWindowMs = Math.max(60000, config.rateLimitWindowMs / 10); // Minimum 1 minute
+  const authMaxRequests = Math.max(3, Math.min(10, config.rateLimitMaxRequests / 4)); // Between 3-10 requests
+
   return createRateLimit(
-    config.rateLimitWindowMs / 10, // Shorter window for auth endpoints
-    config.rateLimitMaxRequests / 4, // Fewer requests allowed for auth
+    authWindowMs,
+    authMaxRequests,
     'Too many authentication attempts. Please try again later.'
   );
 };
 
 export const createGeneralRateLimit = () => {
-  return createRateLimit(
-    config.rateLimitWindowMs,
-    config.rateLimitMaxRequests,
-    'Too many requests. Please try again later.'
-  );
+  // Validate config values and provide fallbacks
+  const windowMs = Math.max(60000, config.rateLimitWindowMs); // Minimum 1 minute
+  const maxRequests = Math.max(10, config.rateLimitMaxRequests); // Minimum 10 requests
+
+  return createRateLimit(windowMs, maxRequests, 'Too many requests. Please try again later.');
 };

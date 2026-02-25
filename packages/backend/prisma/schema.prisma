@@ -67,6 +67,9 @@ model User {
 
   @@index([storeId])
   @@index([email])
+  @@index([role])
+  @@index([createdAt])
+  @@index([isActive])
 }
 
 model Store {
@@ -93,6 +96,8 @@ model Store {
 
   @@index([region])
   @@index([country])
+  @@index([isActive])
+  @@index([name])
 }
 
 model InventoryItem {
@@ -117,6 +122,9 @@ model InventoryItem {
   @@index([storeId])
   @@index([sku])
   @@index([category])
+  @@index([quantity])
+  @@index([reorderLevel])
+  @@index([lastSyncAt])
 }
 
 model Order {
@@ -139,6 +147,9 @@ model Order {
   @@index([orderNumber])
   @@index([status])
   @@index([createdAt])
+  @@index([totalAmount])
+  @@index([orderType])
+  @@index([fulfilledAt])
 }
 
 model OrderItem {
@@ -152,6 +163,8 @@ model OrderItem {
 
   @@index([orderId])
   @@index([sku])
+  @@index([price])
+  @@index([quantity])
 }
 
 model Schedule {
@@ -173,6 +186,9 @@ model Schedule {
   @@index([storeId])
   @@index([userId])
   @@index([shiftDate])
+  @@index([isPublished])
+  @@index([shiftStart])
+  @@index([shiftEnd])
 }
 
 model SwapRequest {
@@ -192,6 +208,8 @@ model SwapRequest {
   @@index([scheduleId])
   @@index([requestedFromUserId])
   @@index([status])
+  @@index([createdAt])
+  @@index([reviewedAt])
 }
 
 model Attendance {
@@ -205,6 +223,8 @@ model Attendance {
   schedule Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 
   @@index([scheduleId])
+  @@index([checkInTime])
+  @@index([checkOutTime])
 }
 
 model SalesRecord {
@@ -222,6 +242,8 @@ model SalesRecord {
   @@index([storeId])
   @@index([userId])
   @@index([recordDate])
+  @@index([category])
+  @@index([amount])
 }
 
 model AuditLog {
@@ -241,6 +263,8 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
   @@index([resourceId])
+  @@index([userId])
+  @@index([resource])
 }
 
 model InventorySyncRecord {
@@ -259,6 +283,8 @@ model InventorySyncRecord {
   @@index([inventoryItemId])
   @@index([storeId])
   @@index([conflictDetected])
+  @@index([resolution])
+  @@index([createdAt])
 }
 
 model SyncQueue {
@@ -279,4 +305,8 @@ model SyncQueue {
   @@index([storeId])
   @@index([status])
   @@index([clientTimestamp])
+  @@index([operation])
+  @@index([resourceId])
+  @@index([retryCount])
+  @@index([syncedAt])
 }
