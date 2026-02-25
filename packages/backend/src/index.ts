@@ -39,13 +39,6 @@ const isAllowedOrigin = (origin: string): boolean => {
   return allowedOrigins.includes(origin);
 };
 
-const corsOrigins =
-  config.nodeEnv === 'production'
-    ? config.corsOrigin
-      ? config.corsOrigin.split(',').map((origin) => origin.trim())
-      : []
-    : ['http://localhost:5173']; // Explicitly allow only development server
-
 app.use(
   cors({
     origin: (origin, callback) => {

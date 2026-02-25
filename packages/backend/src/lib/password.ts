@@ -114,7 +114,7 @@ export const validatePassword = (password: string): void => {
     /%^&/,
     /()_/,
     /+{}/,
-    /[]\|/,
+    /[\]]|/,
   ];
 
   if (keyboardPatterns.some((pattern) => pattern.test(trimmedPassword))) {

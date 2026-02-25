@@ -1,13 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { config } from '../lib/config';
-import { RateLimitRequestHandler } from 'express-rate-limit';
+import rateLimit, { RateLimitRequestHandler } from 'express-rate-limit';
 
 export const createRateLimit = (
   windowMs: number,
   max: number,
   message: string
 ): RateLimitRequestHandler => {
-  return require('express-rate-limit')({
+  return rateLimit({
     windowMs,
     max,
     message: {

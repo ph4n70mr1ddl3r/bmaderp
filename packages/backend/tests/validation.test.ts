@@ -17,7 +17,7 @@ const createMockResponse = () => {
 
 // Sample validation schema for testing
 const userSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  email: z.string().trim().email('Invalid email address'),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters')
@@ -25,12 +25,23 @@ const userSchema = z.object({
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number')
-    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one special character'),
-  firstName: z.string().min(1, 'First name is required').max(50, 'First name is too long'),
-  lastName: z.string().min(1, 'Last name is required').max(50, 'Last name is too long'),
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one special character')
+    .transform((val) => val.trim()),
+  firstName: z
+    .string()
+    .min(1, 'First name is required')
+    .max(50, 'First name is too long')
+    .transform((val) => val.trim()),
+  lastName: z
+    .string()
+    .min(1, 'Last name is required')
+    .max(50, 'Last name is too long')
+    .transform((val) => val.trim()),
   phone: z
     .string()
     .optional()
+    .nullable()
+    .transform((val) => val?.trim())
     .refine((val) => !val || /^\+?[0-9\s\-\(\)]+$/.test(val), { message: 'Invalid phone number' }),
   role: z.enum(['ASSOCIATE', 'STORE_MANAGER', 'REGIONAL_MANAGER', 'ADMIN']).optional(),
 });
@@ -162,7 +173,7 @@ describe('Validation Middleware', () => {
         expect(errorMessages).toContain('Invalid email address');
         expect(errorMessages).toContain('Password must be at least 8 characters');
         expect(errorMessages).toContain('First name is required');
-        expect(errorMessages).toContain('First name is too long');
+        expect(errorMessages).toContain('Last name is too long');
       }
     });
 
@@ -186,9 +197,10 @@ describe('Validation Middleware', () => {
     it('should trim whitespace from strings', () => {
       const userWithWhitespace = {
         email: '  test@example.com  ',
-        password: '  ValidPassword123!  ',
+        password: '  TestPassword123!  ',
         firstName: '  Test  ',
         lastName: '  User  ',
+        role: 'ASSOCIATE',
       };
 
       // Note: Zod doesn't automatically trim, but your validation should

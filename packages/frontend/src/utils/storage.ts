@@ -19,7 +19,7 @@ const setCookie = (
   value: string,
   options: { expires?: Date; secure?: boolean; sameSite?: 'strict' | 'lax' | 'none' } = {}
 ): void => {
-  const { expires, secure = !import.meta.env.PROD, sameSite = 'strict' } = options;
+  const { expires, sameSite = 'strict' } = options;
 
   let cookieString = `${name}=${encodeURIComponent(value)}`;
 
@@ -109,11 +109,11 @@ export const tokenStorage = {
   },
 
   // User data - can be stored in localStorage (not sensitive)
-  getUser: <T = any>(): T | null => {
-    return safeGetJSON('user');
+  getUser: <T = Record<string, unknown>>(): T | null => {
+    return safeGetJSON<T>('user');
   },
 
-  setUser: <T = any>(userData: T): void => {
+  setUser: <T = Record<string, unknown>>(userData: T): void => {
     safeSetItem('user', JSON.stringify(userData));
   },
 
@@ -123,9 +123,9 @@ export const tokenStorage = {
 
   // Complete logout
   clearAll: (): void => {
-    this.removeAccessToken();
-    this.removeRefreshToken();
-    this.removeUser();
+    tokenStorage.removeAccessToken();
+    tokenStorage.removeRefreshToken();
+    tokenStorage.removeUser();
 
     // Clear all other auth-related cookies
     const authCookies = ['csrfToken', 'sessionId'];

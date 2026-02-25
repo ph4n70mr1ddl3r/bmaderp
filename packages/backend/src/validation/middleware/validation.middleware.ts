@@ -1,22 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { validationResult, body, query, param } from 'express-validator';
-import { ValidationError, ApiError } from '@bmaderp/shared';
-import { z } from 'zod';
-import {
-  LoginSchema,
-  RegisterSchema,
-  RefreshTokenSchema,
-  ChangePasswordSchema,
-  CreateInventoryItemSchema,
-  UpdateInventoryItemSchema,
-  UpdateInventoryQuantitySchema,
-  CreateOrderSchema,
-  UpdateOrderSchema,
-  OrderSearchSchema,
-  CreateScheduleSchema,
-  UpdateScheduleSchema,
-  PaginationSchema,
-} from './schemas/validation';
+import { ValidationError } from '@bmaderp/shared';
 
 // Input sanitization function
 const sanitizeInput = (input: string): string => {
@@ -28,7 +12,7 @@ const sanitizeInput = (input: string): string => {
 };
 
 // Output sanitization function to prevent XSS
-const sanitizeOutput = (data: any): any => {
+const sanitizeOutput = (data: unknown): unknown => {
   if (typeof data === 'string') {
     return data
       .replace(/&/g, '&amp;')
@@ -43,8 +27,8 @@ const sanitizeOutput = (data: any): any => {
   }
 
   if (data && typeof data === 'object') {
-    const sanitized: any = {};
-    for (const [key, value] of Object.entries(data)) {
+    const sanitized: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
       sanitized[key] = sanitizeOutput(value);
     }
     return sanitized;
@@ -98,9 +82,9 @@ export const withZodValidation = (
       if (target === 'body') {
         req.body = sanitizeOutput(validatedData);
       } else if (target === 'query') {
-        req.query = validatedData as any;
+        req.query = validatedData as Record<string, string>;
       } else {
-        req.params = validatedData as any;
+        req.params = validatedData as Record<string, string>;
       }
 
       next();

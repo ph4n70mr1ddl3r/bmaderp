@@ -4,6 +4,7 @@ import { config } from '../lib/config.js';
 import { UnauthorizedError, UserRole, JwtPayload } from '@bmaderp/shared';
 import { logger } from '../lib/logger.js';
 
+/* eslint-disable @typescript-eslint/no-namespace */
 // Extend Express Request interface with user type
 declare global {
   namespace Express {

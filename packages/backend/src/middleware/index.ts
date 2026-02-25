@@ -1,6 +1,6 @@
 import { Express, RequestHandler } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { config } from '../lib/config.js';
+
 import { authenticateToken } from './auth.js';
 import { logger } from '../lib/logger.js';
 import { createAuthRateLimit, createGeneralRateLimit } from './rate-limit.js';

@@ -42,7 +42,7 @@ export const RegisterSchema = z.object({
   phone: z
     .string()
     .optional()
-    .regex(/^\+?[\d\s\-\(\)]+$/, 'Invalid phone number format')
+    .regex(/^\+?[\d\s\-()]+$/, 'Invalid phone number format')
     .or(z.literal('')),
   storeId: z.string().min(1, 'Store ID is required').max(50, 'Store ID too long'),
 });
