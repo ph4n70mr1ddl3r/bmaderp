@@ -1,9 +1,10 @@
 import { Express, RequestHandler } from 'express';
-import rateLimit from 'express-rate-limit';
 import { v4 as uuidv4 } from 'uuid';
 import { config } from '../lib/config.js';
 import { authenticateToken } from './auth.js';
 import { logger } from '../lib/logger.js';
+import { createAuthRateLimit, createGeneralRateLimit } from './rate-limit.js';
+import { generateCsrfToken, skipCsrfForPublicEndpoints } from './csrf.js';
 
 export const requestIdMiddleware: RequestHandler = (req, res, next) => {
   const requestId = uuidv4();
@@ -39,26 +40,9 @@ export const requestLoggerMiddleware: RequestHandler = (req, res, next) => {
   next();
 };
 
-const limiter = rateLimit({
-  windowMs: config.rateLimitWindowMs,
-  max: config.rateLimitMaxRequests,
-  message: 'Too many requests, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// Auth-specific rate limiting (more restrictive for login/refresh)
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Allow 5 attempts per 15 minutes
-  message: 'Too many authentication attempts, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => {
-    // Skip rate limiting for non-auth endpoints
-    return !req.path.startsWith('/api/auth/login') && !req.path.startsWith('/api/auth/refresh');
-  },
-});
+// Create reusable rate limiters
+const generalRateLimiter = createGeneralRateLimit();
+const authRateLimiter = createAuthRateLimit();
 
 // Even more restrictive for login endpoint
 const loginLimiter = rateLimit({
@@ -79,10 +63,16 @@ export const setupMiddleware = (app: Express) => {
   app.use(requestLoggerMiddleware);
 
   // Apply general rate limiting first
-  app.use(limiter);
+  app.use(generalRateLimiter);
+
+  // Apply CSRF protection for state-changing requests
+  app.use(skipCsrfForPublicEndpoints);
+
+  // Generate CSRF token endpoint (public)
+  app.get('/api/csrf-token', generateCsrfToken);
 
   // Apply auth-specific rate limiting
-  app.use('/api/auth', authLimiter);
+  app.use('/api/auth', authRateLimiter);
 
   // Apply restrictive login rate limiting
   app.use('/api/auth/login', loginLimiter);

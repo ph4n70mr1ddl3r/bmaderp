@@ -5,6 +5,7 @@
 import express, { Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
 import { createServer } from 'http';
 
 import { setupMiddleware } from './middleware/index.js';
@@ -20,6 +21,7 @@ const app: Express = express();
 const port = config.backendPort;
 
 app.use(helmet());
+app.use(compression());
 
 const isAllowedOrigin = (origin: string): boolean => {
   if (!origin) return false;

@@ -16,8 +16,8 @@ export default defineConfig({
     env: {
       DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
       REDIS_URL: 'redis://localhost:6379',
-      JWT_SECRET: 'test-secret-key-that-is-at-least-32-characters-long',
-      JWT_REFRESH_SECRET: 'test-refresh-secret-key-that-is-at-least-32-characters-long',
+      JWT_SECRET: 'TestSecretKeyWithNumbers123!@#',
+      JWT_REFRESH_SECRET: 'TestRefreshKeyWithNumbers!@#',
       NODE_ENV: 'test',
     },
     coverage: {
