@@ -20,17 +20,24 @@ const app: Express = express();
 const port = config.backendPort;
 
 app.use(helmet());
+
 const corsOrigins =
   config.nodeEnv === 'production'
     ? config.corsOrigin
-      ? config.corsOrigin.split(',')
+      ? config.corsOrigin.split(',').map((origin) => origin.trim())
       : []
-    : [config.corsOrigin];
+    : ['http://localhost:5173']; // Explicitly allow only development server
 
 app.use(
   cors({
     origin: corsOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    exposedHeaders: ['X-Total-Count', 'X-Page', 'X-Limit', 'X-Sort-By', 'X-Sort-Order'],
+    maxAge: 86400, // 24 hours
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   })
 );
 

@@ -2,7 +2,7 @@ import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import type { ApiResponse } from '@bmaderp/shared';
 import { TIMEOUTS, SYNC_CONFIG, API_VERSION } from '@bmaderp/shared';
-import { safeGetItem, safeRemoveItem } from '../utils/storage';
+import { tokenStorage } from '../utils/storage';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
@@ -13,7 +13,7 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  const token = safeGetItem('accessToken');
+  const token = tokenStorage.getAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -48,8 +48,7 @@ apiClient.interceptors.response.use(
       return Promise.reject(apiError);
     }
     if (error.response?.status === 401) {
-      safeRemoveItem('accessToken');
-      safeRemoveItem('user');
+      tokenStorage.clearAll();
       window.location.href = '/login';
     }
     return Promise.reject(error);

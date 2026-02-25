@@ -23,12 +23,16 @@
     "clean": "pnpm -r exec rm -rf dist node_modules .turbo && rm -rf node_modules .pnpm-store pnpm-lock.yaml"
   },
   "devDependencies": {
+    "eslint": "^8.57.1",
     "prettier": "^3.1.1",
-    "typescript": "^5.3.3",
-    "eslint": "^8.57.1"
+    "typescript": "^5.3.3"
   },
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=8.0.0"
+  },
+  "dependencies": {
+    "express-validator": "^7.3.1",
+    "zod": "^4.3.6"
   }
 }
