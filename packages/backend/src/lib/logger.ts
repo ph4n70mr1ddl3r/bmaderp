@@ -2,7 +2,20 @@ import { LOG_LEVELS } from '@bmaderp/shared';
 
 const getTimestamp = () => new Date().toISOString();
 
+const shouldLog = (level: string): boolean => {
+  // In production, only log error and warn levels
+  if (process.env.NODE_ENV === 'production') {
+    return level === LOG_LEVELS.ERROR || level === LOG_LEVELS.WARN;
+  }
+  return true;
+};
+
 const logMessage = (level: string, message: string, data?: unknown, error?: unknown) => {
+  // Skip logging if this level is not configured to be logged
+  if (!shouldLog(level)) {
+    return;
+  }
+
   const logData = {
     level,
     timestamp: getTimestamp(),

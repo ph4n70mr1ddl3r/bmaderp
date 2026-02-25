@@ -15,12 +15,28 @@ export class ErrorBoundary extends React.Component<Props, State> {
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+  static getDerivedStateFromError(error: unknown): State {
+    return {
+      hasError: true,
+      error: error instanceof Error ? error : new Error(String(error)),
+    };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: unknown, errorInfo: React.ErrorInfo) {
     console.error('Error caught by boundary:', error, errorInfo);
+
+    // Log error for monitoring
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+
+    // Send error to monitoring service in production
+    if (import.meta.env.PROD && typeof window !== 'undefined') {
+      // This would typically send to a monitoring service like Sentry
+      // Example: trackJs.error(error, { errorInfo });
+    }
   }
 
   render() {

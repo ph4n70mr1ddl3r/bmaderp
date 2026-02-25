@@ -18,7 +18,44 @@ import {
   PaginationSchema,
 } from './schemas/validation';
 
-export const withValidation = (validations: any[]) => {
+// Input sanitization function
+const sanitizeInput = (input: string): string => {
+  return input
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/on\w+\s*=/gi, '') // Remove event handlers
+    .trim();
+};
+
+// Output sanitization function to prevent XSS
+const sanitizeOutput = (data: any): any => {
+  if (typeof data === 'string') {
+    return data
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  }
+
+  if (Array.isArray(data)) {
+    return data.map((item) => sanitizeOutput(item));
+  }
+
+  if (data && typeof data === 'object') {
+    const sanitized: any = {};
+    for (const [key, value] of Object.entries(data)) {
+      sanitized[key] = sanitizeOutput(value);
+    }
+    return sanitized;
+  }
+
+  return data;
+};
+
+import { ValidationChain } from 'express-validator';
+
+export const withValidation = (validations: ValidationChain[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     // Run all validations
     await Promise.all(validations.map((validation) => validation.run(req)));
@@ -27,11 +64,20 @@ export const withValidation = (validations: any[]) => {
     if (!errors.isEmpty()) {
       const errorMessages = errors.array().map((error) => ({
         field: error.param,
-        message: error.msg,
+        message: sanitizeOutput(error.msg),
         value: error.value,
       }));
 
       throw new ValidationError('Validation failed', { details: errorMessages });
+    }
+
+    // Sanitize input data
+    if (req.body) {
+      Object.keys(req.body).forEach((key) => {
+        if (typeof req.body[key] === 'string') {
+          req.body[key] = sanitizeInput(req.body[key]);
+        }
+      });
     }
 
     next();
@@ -48,9 +94,9 @@ export const withZodValidation = (
       const data = target === 'body' ? req.body : target === 'query' ? req.query : req.params;
       const validatedData = schema.parse(data);
 
-      // Replace the request data with validated data
+      // Replace the request data with validated data and sanitize
       if (target === 'body') {
-        req.body = validatedData;
+        req.body = sanitizeOutput(validatedData);
       } else if (target === 'query') {
         req.query = validatedData as any;
       } else {

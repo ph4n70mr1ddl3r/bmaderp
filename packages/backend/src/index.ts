@@ -21,6 +21,22 @@ const port = config.backendPort;
 
 app.use(helmet());
 
+const isAllowedOrigin = (origin: string): boolean => {
+  if (!origin) return false;
+
+  const allowedOrigins = config.corsOrigin
+    ? config.corsOrigin.split(',').map((origin) => origin.trim())
+    : [];
+
+  // Always allow localhost in development
+  if (config.nodeEnv !== 'production') {
+    return origin.startsWith('http://localhost') || origin.startsWith('https://localhost');
+  }
+
+  // In production, only allow explicitly defined origins
+  return allowedOrigins.includes(origin);
+};
+
 const corsOrigins =
   config.nodeEnv === 'production'
     ? config.corsOrigin
@@ -30,8 +46,22 @@ const corsOrigins =
 
 app.use(
   cors({
-    origin: corsOrigins,
-    credentials: true,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl requests)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      // Check if origin is allowed
+      if (isAllowedOrigin(origin)) {
+        return callback(null, true);
+      }
+
+      // Log blocked origin for security monitoring
+      logger.warn(`CORS blocked request from origin: ${origin}`);
+      return callback(new Error('Not allowed by CORS'), false);
+    },
+    credentials: config.nodeEnv !== 'production', // Only allow credentials in trusted environments
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
     exposedHeaders: ['X-Total-Count', 'X-Page', 'X-Limit', 'X-Sort-By', 'X-Sort-Order'],

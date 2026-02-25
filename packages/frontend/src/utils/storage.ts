@@ -19,7 +19,7 @@ const setCookie = (
   value: string,
   options: { expires?: Date; secure?: boolean; sameSite?: 'strict' | 'lax' | 'none' } = {}
 ): void => {
-  const { expires, secure = true, sameSite = 'strict' } = options;
+  const { expires, secure = !import.meta.env.PROD, sameSite = 'strict' } = options;
 
   let cookieString = `${name}=${encodeURIComponent(value)}`;
 
@@ -27,7 +27,12 @@ const setCookie = (
     cookieString += `; expires=${expires.toUTCString()}`;
   }
 
-  cookieString += `; path=/; secure=${secure}; samesite=${sameSite}`;
+  cookieString += `; path=/; secure; samesite=${sameSite}`;
+
+  // Add httponly flag for sensitive tokens
+  if (name === 'accessToken' || name === 'refreshToken') {
+    cookieString += '; httponly';
+  }
 
   document.cookie = cookieString;
 };
@@ -36,66 +41,71 @@ const removeCookie = (name: string): void => {
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure; samesite=strict`;
 };
 
-// Token storage with fallback to localStorage for development
+// Token storage with secure fallback to localStorage for development
 export const tokenStorage = {
   // Access Token - should be stored in httpOnly cookie in production
   getAccessToken: (): string | null => {
-    // In production, this should come from httpOnly cookie
-    if (import.meta.env.PROD) {
-      // For production, tokens should be handled by httpOnly cookies
-      // This would typically be handled by the backend setting cookies
-      return null; // Tokens are managed by backend via cookies
+    // Always check httpOnly cookie first (works in both dev and prod)
+    const cookieToken = getCookie('accessToken');
+    if (cookieToken) {
+      return cookieToken;
     }
 
-    // Fallback to localStorage for development
-    return safeGetItem('accessToken');
+    // Fallback to localStorage only for development (when no cookies available)
+    if (!import.meta.env.PROD) {
+      return safeGetItem('accessToken');
+    }
+
+    return null; // No token available
   },
 
   setAccessToken: (token: string, rememberMe: boolean = false): void => {
-    if (import.meta.env.PROD) {
-      // In production, this should be handled by backend
-      // The backend should set httpOnly cookies during login
-      return;
-    }
+    // Set httpOnly cookie first (works in both dev and prod)
+    const expires = rememberMe
+      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+      : new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 day default
 
-    // For development, use localStorage with expiration
-    if (rememberMe) {
-      const expires = new Date();
-      expires.setDate(expires.getDate() + 30); // 30 days for remember me
-      localStorage.setItem('accessToken', token);
-    } else {
+    setCookie('accessToken', token, {
+      expires,
+      secure: !import.meta.env.PROD,
+      sameSite: 'strict',
+    });
+
+    // Fallback to localStorage for development only
+    if (!import.meta.env.PROD) {
       localStorage.setItem('accessToken', token);
     }
   },
 
   removeAccessToken: (): void => {
-    if (import.meta.env.PROD) {
-      // In production, backend should clear cookies
-      return;
+    // Clear httpOnly cookie (works in both dev and prod)
+    removeCookie('accessToken');
+
+    // Also clear localStorage for development
+    if (!import.meta.env.PROD) {
+      localStorage.removeItem('accessToken');
     }
-    localStorage.removeItem('accessToken');
   },
 
   // Refresh Token - should always be stored in httpOnly cookie
   getRefreshToken: (): string | null => {
-    if (import.meta.env.PROD) {
-      return null; // Handled by httpOnly cookies
-    }
-    return safeGetItem('refreshToken');
+    // Refresh token should only come from httpOnly cookie for security
+    return getCookie('refreshToken');
   },
 
   setRefreshToken: (token: string): void => {
-    if (import.meta.env.PROD) {
-      return; // Handled by backend
-    }
-    localStorage.setItem('refreshToken', token);
+    // Set refresh token in httpOnly cookie only (never in localStorage)
+    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    setCookie('refreshToken', token, {
+      expires,
+      secure: !import.meta.env.PROD,
+      sameSite: 'strict',
+    });
   },
 
   removeRefreshToken: (): void => {
-    if (import.meta.env.PROD) {
-      return; // Handled by backend
-    }
-    localStorage.removeItem('refreshToken');
+    // Clear refresh token cookie
+    removeCookie('refreshToken');
   },
 
   // User data - can be stored in localStorage (not sensitive)
@@ -116,6 +126,10 @@ export const tokenStorage = {
     this.removeAccessToken();
     this.removeRefreshToken();
     this.removeUser();
+
+    // Clear all other auth-related cookies
+    const authCookies = ['csrfToken', 'sessionId'];
+    authCookies.forEach((cookie) => removeCookie(cookie));
   },
 };
 

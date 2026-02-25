@@ -47,6 +47,29 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Auth-specific rate limiting (more restrictive for login/refresh)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Allow 5 attempts per 15 minutes
+  message: 'Too many authentication attempts, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for non-auth endpoints
+    return !req.path.startsWith('/api/auth/login') && !req.path.startsWith('/api/auth/refresh');
+  },
+});
+
+// Even more restrictive for login endpoint
+const loginLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 3, // Allow only 3 login attempts per 5 minutes
+  message: 'Too many login attempts. Account temporarily locked.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => !req.path.startsWith('/api/auth/login'),
+});
+
 /**
  * Sets up all application middleware including request ID, logging and rate limiting
  * @param app - Express application instance
@@ -54,7 +77,15 @@ const limiter = rateLimit({
 export const setupMiddleware = (app: Express) => {
   app.use(requestIdMiddleware);
   app.use(requestLoggerMiddleware);
+
+  // Apply general rate limiting first
   app.use(limiter);
+
+  // Apply auth-specific rate limiting
+  app.use('/api/auth', authLimiter);
+
+  // Apply restrictive login rate limiting
+  app.use('/api/auth/login', loginLimiter);
 };
 
 export { authenticateToken };
