@@ -27,11 +27,10 @@ const setCookie = (
     cookieString += `; expires=${expires.toUTCString()}`;
   }
 
-  cookieString += `; path=/; secure; samesite=${sameSite}`;
+  cookieString += `; path=/; samesite=${sameSite}`;
 
-  // Add httponly flag for sensitive tokens
-  if (name === 'accessToken' || name === 'refreshToken') {
-    cookieString += '; httponly';
+  if (window.location.protocol === 'https:') {
+    cookieString += '; secure';
   }
 
   document.cookie = cookieString;
@@ -60,18 +59,15 @@ export const tokenStorage = {
   },
 
   setAccessToken: (token: string, rememberMe: boolean = false): void => {
-    // Set httpOnly cookie first (works in both dev and prod)
     const expires = rememberMe
-      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-      : new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 day default
+      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     setCookie('accessToken', token, {
       expires,
-      secure: !import.meta.env.PROD,
       sameSite: 'strict',
     });
 
-    // Fallback to localStorage for development only
     if (!import.meta.env.PROD) {
       localStorage.setItem('accessToken', token);
     }
@@ -94,11 +90,9 @@ export const tokenStorage = {
   },
 
   setRefreshToken: (token: string): void => {
-    // Set refresh token in httpOnly cookie only (never in localStorage)
-    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     setCookie('refreshToken', token, {
       expires,
-      secure: !import.meta.env.PROD,
       sameSite: 'strict',
     });
   },

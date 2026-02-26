@@ -4,6 +4,17 @@ import type { ApiResponse } from '@bmaderp/shared';
 import { TIMEOUTS, SYNC_CONFIG, API_VERSION } from '@bmaderp/shared';
 import { tokenStorage } from '../utils/storage';
 
+const getCsrfToken = (): string | null => {
+  const cookies = document.cookie.split(';');
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === '_csrf' || name === 'csrfToken' || name === 'XSRF-TOKEN') {
+      return decodeURIComponent(value);
+    }
+  }
+  return null;
+};
+
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
   timeout: TIMEOUTS.API_REQUEST,
@@ -17,6 +28,12 @@ apiClient.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  const csrfToken = getCsrfToken();
+  if (csrfToken) {
+    config.headers['X-CSRF-Token'] = csrfToken;
+  }
+
   return config;
 });
 

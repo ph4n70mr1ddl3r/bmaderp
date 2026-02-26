@@ -40,19 +40,17 @@ const sanitizeOutput = (data: unknown): unknown => {
 import { ValidationChain } from 'express-validator';
 
 export const withValidation = (validations: ValidationChain[]) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    // Run all validations
+  return async (req: Request, _res: Response, next: NextFunction) => {
     await Promise.all(validations.map((validation) => validation.run(req)));
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       const errorMessages = errors.array().map((error) => ({
-        field: error.param,
+        field: 'param' in error ? error.param : 'unknown',
         message: sanitizeOutput(error.msg),
-        value: error.value,
       }));
 
-      throw new ValidationError('Validation failed', { details: errorMessages });
+      throw new ValidationError(`Validation failed: ${JSON.stringify(errorMessages)}`);
     }
 
     // Sanitize input data
@@ -65,41 +63,6 @@ export const withValidation = (validations: ValidationChain[]) => {
     }
 
     next();
-  };
-};
-
-// Zod validation middleware
-export const withZodValidation = (
-  schema: z.ZodSchema,
-  target: 'body' | 'query' | 'params' = 'body'
-) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const data = target === 'body' ? req.body : target === 'query' ? req.query : req.params;
-      const validatedData = schema.parse(data);
-
-      // Replace the request data with validated data and sanitize
-      if (target === 'body') {
-        req.body = sanitizeOutput(validatedData);
-      } else if (target === 'query') {
-        req.query = validatedData as Record<string, string>;
-      } else {
-        req.params = validatedData as Record<string, string>;
-      }
-
-      next();
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const errorMessages = error.errors.map((err) => ({
-          field: err.path.join('.'),
-          message: err.message,
-          code: err.code,
-        }));
-
-        throw new ValidationError('Validation failed', { details: errorMessages });
-      }
-      throw error;
-    }
   };
 };
 

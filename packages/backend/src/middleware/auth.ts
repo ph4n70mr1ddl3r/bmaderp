@@ -86,7 +86,7 @@ export const authenticateToken = (req: Request, _res: Response, next: NextFuncti
     next();
   } catch (err) {
     if (err instanceof jwt.TokenExpiredError) {
-      logger.error('JWT token expired', { userId: req.user?.userId, error: err.message });
+      logger.error('JWT token expired', { error: err.message });
       throw new UnauthorizedError('Token expired');
     }
     if (err instanceof jwt.JsonWebTokenError) {

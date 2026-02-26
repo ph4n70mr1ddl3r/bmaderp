@@ -47,6 +47,12 @@ const validateConfig = (): Config => {
     throw new Error('RATE_LIMIT_MAX_REQUESTS must be a positive number');
   }
 
+  const validNodeEnvs = ['development', 'test', 'production'];
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  if (!validNodeEnvs.includes(nodeEnv)) {
+    throw new Error(`NODE_ENV must be one of: ${validNodeEnvs.join(', ')}`);
+  }
+
   // Validate JWT secrets
   if (!isStrongSecret(jwtSecret)) {
     throw new Error(
@@ -63,7 +69,7 @@ const validateConfig = (): Config => {
   const config: Config = {
     backendPort,
     corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-    nodeEnv: process.env.NODE_ENV || 'development',
+    nodeEnv,
     rateLimitWindowMs,
     rateLimitMaxRequests,
     databaseUrl,

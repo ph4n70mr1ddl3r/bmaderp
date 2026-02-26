@@ -103,18 +103,15 @@ export const validatePassword = (password: string): void => {
 
   // Check for keyboard patterns
   const keyboardPatterns = [
-    /qwerty/,
-    /asdf/,
-    /zxcv/,
-    /1234/,
-    /qwer/,
-    /asdf/,
-    /zxcv/,
-    /!@#$/,
+    /qwerty/i,
+    /asdf/i,
+    /zxcv/i,
+    /qwer/i,
+    /!@#\$/,
     /%^&/,
-    /()_/,
-    /+{}/,
-    /[\]]|/,
+    /\(\)_/,
+    /\+\{\}/,
+    /[[\]|]/,
   ];
 
   if (keyboardPatterns.some((pattern) => pattern.test(trimmedPassword))) {
