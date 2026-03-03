@@ -27,6 +27,8 @@ editHistory:
     changes: 'Added 12 missing FRs (FR76-FR87): Webhooks (3), Mobile & Offline (5), Extensibility (4)'
   - date: '2026-03-03'
     changes: 'Resolved MVP journey contradiction by marking FR76-FR87 as Phase 2 features'
+  - date: '2026-03-03'
+    changes: 'Added SOX Control Framework with SOD matrix, financial controls, and monitoring; Added Approval Workflow FRs (FR88-FR94)'
 ---
 
 # Product Requirements Document - bmaderp
@@ -614,7 +616,7 @@ Transparency is now a feature, not a request.
 | **Immutable Financials** | Posted journal entries cannot be edited; corrections via reversing entries only | Critical |
 | **SOC 2 Type II Readiness** | Architecture supports SOC 2 audit (access controls, encryption, logging, incident response) | High |
 | **GDPR Compliance** | Data subject rights (access, deletion, portability), consent management, DPA-ready | High |
-| **SOX-Friendly** | Segregation of duties, approval workflows, financial controls documentation | High (for public company customers) |
+| **SOX Control Framework** | See SOX Controls section below | High (for public company customers) |
 | **Tax Engine** | Configurable tax rules by jurisdiction; sales tax, VAT, GST support | High |
 
 ### Technical Constraints
@@ -646,6 +648,43 @@ Transparency is now a feature, not a request.
 | **Regulatory Non-Compliance** | Compliance templates by jurisdiction; automated compliance checks |
 | **Vendor Lock-in (for customers)** | Full data export; standard formats (CSV, JSON); API access |
 | **Upgrade Failures** | Feature flag architecture; gradual rollouts; instant rollback |
+
+### SOX Controls (Enterprise Tier)
+
+**Segregation of Duties (SOD) Matrix:**
+
+| Role | Create JE | Approve JE | Create Payment | Approve Payment | Modify COA |
+|------|-----------|------------|----------------|-----------------|------------|
+| **Standard User** | ✓ | — | ✓ | — | — |
+| **Finance Lead** | ✓ | ✓ | ✓ | ✓ | View |
+| **Tenant Admin** | ✓ | ✓ | ✓ | ✓ | ✓ |
+| **External Auditor** | View | — | View | — | View |
+
+**SOD Violation Detection:**
+- System alerts when single user attempts incompatible actions
+- Quarterly SOD report for audit committee
+- Emergency override with documented justification and dual approval
+
+**Financial Controls:**
+
+| Control | Trigger | Requirement |
+|---------|---------|-------------|
+| **Journal Entry Approval** | Amount > $10,000 or adjusting entry | Dual approval required |
+| **Payment Approval** | Amount > $5,000 | Manager approval; >$25,000 requires Finance Lead |
+| **Vendor Setup** | New vendor creation | Separate user from first payment to that vendor |
+| **Account Modification** | Chart of accounts changes | Finance Lead approval + audit log |
+| **Period Close** | Month-end close | All reconciliations complete; no pending items |
+
+**Control Monitoring:**
+- Real-time SOD violation alerts to compliance team
+- Weekly control effectiveness dashboard
+- Automated evidence collection for audits (screenshots, timestamps, approvals)
+- Control testing schedule with pass/fail tracking
+
+**Compliance Reporting:**
+- Monthly control effectiveness summary
+- Quarterly SOD exception report with remediation status
+- Annual control attestation package for external auditors
 
 ---
 
@@ -1065,6 +1104,16 @@ Transparency is now a feature, not a request.
 - **FR85:** Users can view and edit custom fields in standard forms and reports
 - **FR86:** Developers can extend system functionality via a plugin architecture
 - **FR87:** Tenant administrators can enable or disable plugins per tenant
+
+### Approval Workflow (Enterprise Tier)
+
+- **FR88:** Tenant administrators can configure approval rules by transaction type and amount threshold
+- **FR89:** Users can submit transactions for approval with optional comments
+- **FR90:** Designated approvers can approve, reject, or request changes on pending transactions
+- **FR91:** Approvers can delegate approval authority to other users during absence
+- **FR92:** The system can route approvals through multiple levels based on amount or type
+- **FR93:** Users can view approval history with timestamps, approvers, and comments
+- **FR94:** The system can escalate overdue approvals to designated backup approvers
 
 ---
 
