@@ -19,6 +19,10 @@ classification:
   domain: 'Enterprise Business Software (ERP)'
   complexity: 'high'
   projectContext: 'greenfield'
+lastEdited: '2026-03-03'
+editHistory:
+  - date: '2026-03-03'
+    changes: 'Added Measurement column to all 34 NFRs (NFR1-NFR34) across 6 categories'
 ---
 
 # Product Requirements Document - bmaderp
@@ -1032,8 +1036,8 @@ Transparency is now a feature, not a request.
 ### Integration & API
 
 - **FR71:** External systems can authenticate via API keys
-- **FR72:** External systems can read data via REST API endpoints
-- **FR73:** External systems can create records via REST API endpoints
+- **FR72:** External systems can read data via standard API endpoints
+- **FR73:** External systems can create records via standard API endpoints
 - **FR74:** Users can view API documentation within the application
 - **FR75:** Users can manage API keys (create, revoke, view last used)
 
@@ -1043,64 +1047,64 @@ Transparency is now a feature, not a request.
 
 ### Performance
 
-| ID | Requirement | Target | Rationale |
-|----|-------------|--------|-----------|
-| **NFR1** | API response time (p99) | <100ms | Sub-second for all user actions; competitive differentiator |
-| **NFR2** | Page load time (initial) | <2 seconds | First contentful paint |
-| **NFR3** | Page load time (subsequent) | <500ms | Cached resources, optimized asset delivery |
-| **NFR4** | Auto-match decision time | <500ms per transaction | No user waiting during reconciliation |
-| **NFR5** | Bank feed sync duration | <15 minutes | Near real-time reconciliation |
-| **NFR6** | Concurrent users per tenant | 50+ | Support Growth tier without degradation |
-| **NFR7** | Report generation time | <5 seconds | Standard reports; complex reports <30 seconds |
+| ID | Requirement | Target | Measurement | Rationale |
+|----|-------------|--------|-------------|-----------|
+| **NFR1** | API response time (p99) | <100ms | APM monitoring at p99 percentile | Sub-second for all user actions; competitive differentiator |
+| **NFR2** | Page load time (initial) | <2 seconds | Lighthouse audits + Real User Monitoring (RUM) | First contentful paint |
+| **NFR3** | Page load time (subsequent) | <500ms | APM + browser Performance Timing API | Cached resources, optimized asset delivery |
+| **NFR4** | Auto-match decision time | <500ms per transaction | Application logs with timing metrics | No user waiting during reconciliation |
+| **NFR5** | Bank feed sync duration | <15 minutes | Sync timestamp monitoring with alerting | Near real-time reconciliation |
+| **NFR6** | Concurrent users per tenant | 50+ | Load testing with k6, 50 concurrent sessions | Support Growth tier without degradation |
+| **NFR7** | Report generation time | <5 seconds | APM report timing logs, performance dashboards | Standard reports; complex reports <30 seconds |
 
 ### Security
 
-| ID | Requirement | Target | Rationale |
-|----|-------------|--------|-----------|
-| **NFR8** | Data encryption in transit | Industry-standard encryption | Industry standard; compliance requirement |
-| **NFR9** | Data encryption at rest | Industry-standard encryption | Industry standard; compliance requirement |
-| **NFR10** | PII field-level encryption | Industry-standard encryption | Enhanced protection for sensitive data |
-| **NFR11** | Password storage | Modern secure hashing algorithm | Resistant to brute-force and rainbow table attacks |
-| **NFR12** | Session management | Secure stateless authentication with configurable expiry | Secure, scalable authentication |
-| **NFR13** | Multi-tenant data isolation | Zero cross-tenant access | Architectural guarantee; existential risk if failed |
-| **NFR14** | API authentication | Secure machine-to-machine authentication | Cryptographic verification of API requests |
-| **NFR15** | Vulnerability response | <24 hours for critical | Security incident SLA |
+| ID | Requirement | Target | Measurement | Rationale |
+|----|-------------|--------|-------------|-----------|
+| **NFR8** | Data encryption in transit | Industry-standard encryption | Annual security audit, SSL Labs A+ rating | Industry standard; compliance requirement |
+| **NFR9** | Data encryption at rest | Industry-standard encryption | Infrastructure audit, SOC 2 certification | Industry standard; compliance requirement |
+| **NFR10** | PII field-level encryption | Industry-standard encryption | Database schema audit, encryption verification | Enhanced protection for sensitive data |
+| **NFR11** | Password storage | Modern secure hashing algorithm | Security audit, annual penetration testing | Resistant to brute-force and rainbow table attacks |
+| **NFR12** | Session management | Secure stateless authentication with configurable expiry | Session log analysis, security audit review | Secure, scalable authentication |
+| **NFR13** | Multi-tenant data isolation | Zero cross-tenant access | Automated isolation tests, annual pen testing | Architectural guarantee; existential risk if failed |
+| **NFR14** | API authentication | Secure machine-to-machine authentication | API access log review, security audit | Cryptographic verification of API requests |
+| **NFR15** | Vulnerability response | <24 hours for critical | Incident response log review, SLA tracking | Security incident SLA |
 
 ### Reliability
 
-| ID | Requirement | Target | Rationale |
-|----|-------------|--------|-----------|
-| **NFR16** | Uptime SLA | 99.9% (8.7 hours max downtime/year) | Enterprise customer expectation |
-| **NFR17** | Data durability | 99.999999999% (11 9s) | Financial data must not be lost |
-| **NFR18** | Recovery time objective (RTO) | <4 hours | Business continuity requirement |
-| **NFR19** | Recovery point objective (RPO) | <1 hour | Maximum acceptable data loss |
-| **NFR20** | Zero-downtime deployments | 100% | Schema changes without customer impact |
-| **NFR21** | Graceful degradation | Non-critical features fail independently | Core accounting always available |
+| ID | Requirement | Target | Measurement | Rationale |
+|----|-------------|--------|-------------|-----------|
+| **NFR16** | Uptime SLA | 99.9% (8.7 hours max downtime/year) | Uptime monitoring (Pingdom/StatusCake), monthly reporting | Enterprise customer expectation |
+| **NFR17** | Data durability | 99.999999999% (11 9s) | Cloud provider SLA verification, quarterly recovery tests | Financial data must not be lost |
+| **NFR18** | Recovery time objective (RTO) | <4 hours | Quarterly disaster recovery drills, documented RTO | Business continuity requirement |
+| **NFR19** | Recovery point objective (RPO) | <1 hour | Backup timestamp monitoring, monthly recovery testing | Maximum acceptable data loss |
+| **NFR20** | Zero-downtime deployments | 100% | Deployment monitoring, health check verification post-deploy | Schema changes without customer impact |
+| **NFR21** | Graceful degradation | Non-critical features fail independently | Chaos engineering tests, failure injection scenarios | Core accounting always available |
 
 ### Scalability
 
-| ID | Requirement | Target | Rationale |
-|----|-------------|--------|-----------|
-| **NFR22** | Tenants per instance | 1,000+ | Multi-tenant efficiency |
-| **NFR23** | Transactions per tenant | 1M+/year | Enterprise-scale data volume |
-| **NFR24** | Horizontal scaling | Automatic based on load | Cloud-native architecture |
-| **NFR25** | Database growth | 10TB+ without performance degradation | Long-term data retention |
-| **NFR26** | Background job scaling | Independent from web tier | Reconciliation, reporting don't block UI |
+| ID | Requirement | Target | Measurement | Rationale |
+|----|-------------|--------|-------------|-----------|
+| **NFR22** | Tenants per instance | 1,000+ | Load testing to 1,000 tenants, capacity metrics | Multi-tenant efficiency |
+| **NFR23** | Transactions per tenant | 1M+/year | Database capacity monitoring, growth trend analysis | Enterprise-scale data volume |
+| **NFR24** | Horizontal scaling | Automatic based on load | Load testing with auto-scaling trigger verification | Cloud-native architecture |
+| **NFR25** | Database growth | 10TB+ without performance degradation | Performance testing at 10TB scale, query analysis | Long-term data retention |
+| **NFR26** | Background job scaling | Independent from web tier | Job queue monitoring, resource isolation load tests | Reconciliation, reporting don't block UI |
 
 ### Integration
 
-| ID | Requirement | Target | Rationale |
-|----|-------------|--------|-----------|
-| **NFR27** | API availability | 99.9% | External systems depend on it |
-| **NFR28** | Webhook delivery | <30 seconds or retry | Event notification reliability |
-| **NFR29** | Webhook retry | 3 attempts with exponential backoff | Handle transient failures |
-| **NFR30** | Bank feed reliability | 99.5% sync success rate | Core value prop depends on it |
-| **NFR31** | Idempotent API operations | All POST/PUT endpoints | Safe retry on failure |
+| ID | Requirement | Target | Measurement | Rationale |
+|----|-------------|--------|-------------|-----------|
+| **NFR27** | API availability | 99.9% | API health monitoring, synthetic transaction checks | External systems depend on it |
+| **NFR28** | Webhook delivery | <30 seconds or retry | Webhook delivery logs, timestamp delta tracking | Event notification reliability |
+| **NFR29** | Webhook retry | 3 attempts with exponential backoff | Retry log analysis, dead letter queue monitoring | Handle transient failures |
+| **NFR30** | Bank feed reliability | 99.5% sync success rate | Sync success rate dashboard, error tracking alerts | Core value prop depends on it |
+| **NFR31** | Idempotent API operations | All POST/PUT endpoints | API test suite with retry scenarios, idempotency verification | Safe retry on failure |
 
 ### Accessibility
 
-| ID | Requirement | Target | Rationale |
-|----|-------------|--------|-----------|
-| **NFR32** | WCAG compliance | Level AA (Phase 2) | Enterprise customer requirement |
-| **NFR33** | Keyboard navigation | All core functions | Power user efficiency |
-| **NFR34** | Screen reader support | Basic support (Phase 2) | Compliance and inclusivity |
+| ID | Requirement | Target | Measurement | Rationale |
+|----|-------------|--------|-------------|-----------|
+| **NFR32** | WCAG compliance | Level AA (Phase 2) | Automated accessibility audits (axe-core, WAVE) | Enterprise customer requirement |
+| **NFR33** | Keyboard navigation | All core functions | Manual QA testing, keyboard-only UAT | Power user efficiency |
+| **NFR34** | Screen reader support | Basic support (Phase 2) | Screen reader testing (NVDA, VoiceOver), accessibility audit | Compliance and inclusivity |
