@@ -25,6 +25,8 @@ editHistory:
     changes: 'Added Measurement column to all 34 NFRs (NFR1-NFR34) across 6 categories'
   - date: '2026-03-03'
     changes: 'Added 12 missing FRs (FR76-FR87): Webhooks (3), Mobile & Offline (5), Extensibility (4)'
+  - date: '2026-03-03'
+    changes: 'Resolved MVP journey contradiction by marking FR76-FR87 as Phase 2 features'
 ---
 
 # Product Requirements Document - bmaderp
@@ -1042,11 +1044,14 @@ Transparency is now a feature, not a request.
 - **FR73:** External systems can create records via standard API endpoints
 - **FR74:** Users can view API documentation within the application
 - **FR75:** Users can manage API keys (create, revoke, view last used)
+
+### Webhooks (Phase 2)
+
 - **FR76:** External systems can subscribe to entity change events via webhooks
 - **FR77:** Users can configure webhook endpoints and event subscriptions per entity type
 - **FR78:** The system can retry failed webhook deliveries with exponential backoff
 
-### Mobile & Offline
+### Mobile & Offline (Phase 2)
 
 - **FR79:** Mobile users can access core functions via progressive web app (PWA)
 - **FR80:** Mobile users can continue working offline with automatic sync when connected
@@ -1054,7 +1059,7 @@ Transparency is now a feature, not a request.
 - **FR82:** Mobile users can scan barcodes to look up inventory items
 - **FR83:** Mobile users can scan barcodes to quickly create transactions (receiving, transfers, adjustments)
 
-### Extensibility
+### Extensibility (Phase 2)
 
 - **FR84:** Tenant administrators can define custom fields on core entities
 - **FR85:** Users can view and edit custom fields in standard forms and reports
